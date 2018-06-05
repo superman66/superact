@@ -1,2 +1,2 @@
-# supeact
+# superact
  >build a simple react
