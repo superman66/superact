@@ -57,7 +57,7 @@ export const render = (vdom, parent = null) => {
 
 /**
  * DOM 更新
- * @param {*} dom 需要更新的dom
+ * @param {*} dom 要新增的 dom
  * @param {*} vdom 当前 Virtual DOM
  * @param {*} parent dom parent 节点
  */
@@ -80,10 +80,22 @@ export function patch(dom, vdom, parent = dom.parentNode) {
     typeof vdom === 'object' &&
     dom.nodeName === vdom.type.toUpperCase()
   ) {
+    // 用于存储 childNodes
     const pool = {}
     const active = document.activeElement
+    Array.from(dom.nodeChildNodes).map((child, index) => {
+      let key = child.__superactKey
 
-    Array.from(dom.childNodes).map((child, index) => {
+      if (!key && child.tagName !== undefined) {
+        key = child.tagName + index
+      }
+      if (!key && child.tagName === undefined) {
+        key = child.textContent
+        pool[key] = child
+      }
+    })
+
+    vdom.children.map((child, index) => {
       let key = child.props && child.props.key
 
       // 如果 key 不存在 且 child 不是 Text 的话，则为每个 child 添加 key
@@ -96,10 +108,12 @@ export function patch(dom, vdom, parent = dom.parentNode) {
         key = child.toString()
       }
 
+      // key 存在，则更新节点
       if (pool[key] !== undefined) {
         dom.appendChild(patch(pool[key], child))
       }
 
+      // key 不存在，直接渲染节点
       if (pool[key] === undefined) {
         dom.appendChild(render(child, dom))
       }
